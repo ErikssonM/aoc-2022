@@ -1,49 +1,57 @@
+use std::{collections::HashSet, hash::Hash};
+
 use itertools::Itertools;
 
 static PRIORITIES: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+fn fill_hash_set(items: &str) -> HashSet<char> {
+    let mut hs = HashSet::new();
+    items.chars().for_each(|item| {
+        hs.insert(item);
+    });
+    hs
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
-    let rucksacks: Vec<(&str, &str)> = input
-        .split("\n")
-        .map(|row| row.split_at(row.len() / 2))
+    let rucksacks: Vec<(HashSet<char>, HashSet<char>)> = input
+        .lines()
+        .map(|row| {
+            let (first, second) = row.split_at(row.len() / 2);
+            (fill_hash_set(first), fill_hash_set(second))
+        })
         .collect();
 
     let items: Vec<char> = rucksacks
         .iter()
-        .map(|(first, second)| {
-            first
-                .chars()
-                .into_iter()
-                .find_map(|fc| second.chars().find(|sc| *sc == fc))
-                .unwrap()
-        })
+        .flat_map(|(first, second)| first.intersection(second).cloned().collect_vec())
         .collect();
 
     Some(
         items
             .iter()
-            .map(|c| PRIORITIES.find(*c).unwrap() as u32 + 1)
+            .map(|c: &char| PRIORITIES.find(*c).unwrap() as u32 + 1)
             .sum(),
     )
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let groups: Vec<(&str, &str, &str)> = input.split("\n").tuples().collect();
+    let groups: Vec<(HashSet<char>, HashSet<char>, HashSet<char>)> = input
+        .lines()
+        .tuples()
+        .map(|(first, second, third)| {
+            (
+                fill_hash_set(first),
+                fill_hash_set(second),
+                fill_hash_set(third),
+            )
+        })
+        .collect();
 
     let badges: Vec<char> = groups
-        .into_iter()
-        .map(|(first, second, third)| {
-            first
-                .chars()
-                .into_iter()
-                .find_map(|fc| {
-                    if second.chars().contains(&fc) && third.chars().contains(&fc) {
-                        Some(fc)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap()
+        .iter()
+        .flat_map(|(first, second, third)| {
+            let first_and_second: HashSet<char> = first.intersection(second).cloned().collect();
+            first_and_second.intersection(third).cloned().collect_vec()
         })
         .collect();
 

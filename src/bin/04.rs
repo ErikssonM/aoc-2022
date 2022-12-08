@@ -1,11 +1,11 @@
 pub fn part_one(input: &str) -> Option<u32> {
     let range_pairs: Vec<Vec<u32>> = input
         .lines()
-        .map(|l|
+        .map(|l| {
             l.split(['-', ','])
                 .map(|s| s.parse::<u32>().unwrap())
                 .collect()
-        )
+        })
         .collect();
 
     let mut count = 0;
@@ -23,11 +23,11 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u32> {
     let range_pairs: Vec<Vec<u32>> = input
         .lines()
-        .map(|l|
+        .map(|l| {
             l.split(['-', ','])
                 .map(|s| s.parse::<u32>().unwrap())
                 .collect()
-        )
+        })
         .collect();
 
     let mut count = 0;
