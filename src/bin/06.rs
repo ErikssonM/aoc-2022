@@ -6,9 +6,7 @@ fn find_distinct_marker(input: &str, n_chars: usize) -> u32 {
     let chars = input.chars().collect_vec();
     let marker_start = chars[..]
         .windows(n_chars)
-        .take_while(|ch| 
-            HashSet::<char>::from_iter(ch.iter().cloned()).len() != n_chars
-        )
+        .take_while(|ch| HashSet::<char>::from_iter(ch.iter().cloned()).len() != n_chars)
         .count();
     (marker_start + n_chars) as u32
 }
