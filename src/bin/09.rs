@@ -13,70 +13,25 @@ fn parse_steps(input: &str) -> Vec<(&str, u32)> {
         .collect()
 }
 
-fn simulate_step(head: &Pos, tail: &Pos, dir: &str) -> (Pos, Pos) {
+fn simulate_head(head: &Pos, dir: &str) -> Pos {
     match dir {
-        "U" => {
-            let new_head = (head.0, head.1 + 1);
-            let mut new_tail = tail.clone();
-            let dx = new_head.0 - tail.0;
-            let dy = new_head.1 - tail.1;
-            if dy.abs() > 1 {
-                new_tail.1 += 1;
-                if dx == 1 {
-                    new_tail.0 += 1;
-                } else if dx == -1 {
-                    new_tail.0 -= 1;
-                }
-            }
+        "U" => (head.0, head.1 - 1),
+        "D" => (head.0, head.1 + 1),
+        "L" => (head.0 - 1, head.1),
+        "R" => (head.0 + 1, head.1),
+        _ => panic!(),
+    }
+}
 
-            (new_head, new_tail)
-        }
-        "D" => {
-            let new_head = (head.0, head.1 - 1);
-            let mut new_tail = tail.clone();
-            let dx = new_head.0 - tail.0;
-            let dy = new_head.1 - tail.1;
-            if dy.abs() > 1 {
-                new_tail.1 -= 1;
-                if dx == 1 {
-                    new_tail.0 += 1;
-                } else if dx == -1 {
-                    new_tail.0 -= 1;
-                }
-            }
-            (new_head, new_tail)
-        }
-        "L" => {
-            let new_head = (head.0 - 1, head.1);
-            let mut new_tail = tail.clone();
-            let dx = new_head.0 - tail.0;
-            let dy = new_head.1 - tail.1;
-            if dx.abs() > 1 {
-                new_tail.0 -= 1;
-                if dy == 1 {
-                    new_tail.1 += 1;
-                } else if dy == -1 {
-                    new_tail.1 -= 1;
-                }
-            }
-            (new_head, new_tail)
-        }
-        "R" => {
-            let new_head = (head.0 + 1, head.1);
-            let mut new_tail = tail.clone();
-            let dx = new_head.0 - tail.0;
-            let dy = new_head.1 - tail.1;
-            if dx.abs() > 1 {
-                new_tail.0 += 1;
-                if dy == 1 {
-                    new_tail.1 += 1;
-                } else if dy == -1 {
-                    new_tail.1 -= 1;
-                }
-            }
-            (new_head, new_tail)
-        }
-        _ => panic!("Panic"),
+fn tail_follows_head(head: &Pos, tail: &Pos) -> Pos {
+    let dx = head.0 - tail.0;
+    let dy = head.1 - tail.1;
+    if dx.abs() <= 1 && dy.abs() <= 1 {
+        // Adjacent
+        *tail
+    } else {
+        // Step once
+        (tail.0 + dx.signum(), tail.1 + dy.signum())
     }
 }
 
@@ -91,9 +46,10 @@ pub fn part_one(input: &str) -> Option<u32> {
 
     for (dir, count) in steps {
         for _step in 0..count {
-            let (head, tail) = simulate_step(&head_pos, &tail_pos, dir);
-            head_pos = head;
-            tail_pos = tail;
+            let new_head = simulate_head(&head_pos, dir);
+            let new_tail = tail_follows_head(&new_head, &tail_pos);
+            head_pos = new_head;
+            tail_pos = new_tail;
 
             tail_visited.insert(tail_pos);
         }
@@ -104,6 +60,11 @@ pub fn part_one(input: &str) -> Option<u32> {
 
 pub fn part_two(input: &str) -> Option<u32> {
     let steps = parse_steps(input);
+
+    let mut positions: Vec<Pos> = vec![(0, 0); 10];
+
+    let mut tail_visited: HashSet<Pos> = HashSet::new();
+    tail_visited.insert(positions.last().unwrap().clone());
 
     None
 }
