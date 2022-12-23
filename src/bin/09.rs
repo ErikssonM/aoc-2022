@@ -66,7 +66,23 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut tail_visited: HashSet<Pos> = HashSet::new();
     tail_visited.insert(positions.last().unwrap().clone());
 
-    None
+    for (dir, count) in steps {
+        for _step in 0..count {
+            let head = positions[0];
+            let new_head = simulate_head(&head, dir);
+            let mut new_positions = vec![new_head];
+            for i in 1..positions.len() {
+                let previous_segment = new_positions.last().unwrap();
+                let tail = positions[i];
+                let new_tail = tail_follows_head(&previous_segment, &tail);
+                new_positions.push(new_tail);
+            }
+            positions = new_positions;
+            tail_visited.insert(positions.last().unwrap().clone());
+        }
+    }
+
+    Some(tail_visited.len().try_into().unwrap())
 }
 
 fn main() {
@@ -87,7 +103,15 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", 9);
+        let input = "R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20
+";
         assert_eq!(part_two(&input), Some(36));
     }
 }
