@@ -47,6 +47,27 @@ fn signal_strength(x_at_time: &Vec<i32>) -> i32 {
     signal_strength
 }
 
+fn draw_crt(x_at_time: &Vec<i32>) -> String {
+    let mut crt = String::new();
+    for cycle in 1..241 {
+        let horizontal_pixel = (cycle - 1) % 40;
+        if let Some(register_x) = x_at_time.get(cycle) {
+            let window = [register_x - 1, *register_x, register_x + 1];
+            if window.contains(&(horizontal_pixel as i32)) {
+                crt.push('#');
+            } else {
+                crt.push('.');
+            }
+        } else {
+            crt.push('.');
+        }
+        if cycle % 40 == 0 {
+            crt.push('\n');
+        }
+    }
+    crt
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let commands = parse_commands(input);
     let x_at_time = run(&commands);
@@ -56,7 +77,10 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<String> {
-    None
+    let commands = parse_commands(input);
+    let x_at_time = run(&commands);
+    let crt = draw_crt(&x_at_time);
+    Some(crt)
 }
 
 fn main() {
@@ -86,8 +110,9 @@ mod tests {
 ####....####....####....####....####....
 #####.....#####.....#####.....#####.....
 ######......######......######......####
-#######.......#######.......#######....."
-                    .to_string()
+#######.......#######.......#######.....
+"
+                .to_string()
             )
         );
     }
