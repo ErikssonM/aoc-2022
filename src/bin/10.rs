@@ -19,8 +19,8 @@ fn parse_commands(input: &str) -> Vec<Command> {
         .collect()
 }
 
-fn run(commands: &Vec<Command>) -> i32 {
-    let mut x_at_time: Vec<i32> = Vec::new();
+fn run(commands: &Vec<Command>) -> Vec<i32> {
+    let mut x_at_time: Vec<i32> = vec![1];
     let mut register_x = 1;
     for cmd in commands {
         match cmd {
@@ -34,11 +34,14 @@ fn run(commands: &Vec<Command>) -> i32 {
             }
         }
     }
+    x_at_time
+}
 
+fn signal_strength(x_at_time: &Vec<i32>) -> i32 {
     let mut signal_strength = 0;
-    for t in 0..(x_at_time.len() + 1) {
+    for t in 0..x_at_time.len() {
         if t >= 20 && (t - 20) % 40 == 0 {
-            signal_strength += (t as i32) * x_at_time[t - 1];
+            signal_strength += (t as i32) * x_at_time[t];
         }
     }
     signal_strength
@@ -46,12 +49,13 @@ fn run(commands: &Vec<Command>) -> i32 {
 
 pub fn part_one(input: &str) -> Option<u32> {
     let commands = parse_commands(input);
-    let signal = run(&commands);
+    let x_at_time = run(&commands);
+    let signal = signal_strength(&x_at_time);
 
     Some(signal.try_into().unwrap())
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
+pub fn part_two(input: &str) -> Option<String> {
     None
 }
 
@@ -74,6 +78,17 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 10);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(
+            part_two(&input),
+            Some(
+                "##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######....."
+                    .to_string()
+            )
+        );
     }
 }
