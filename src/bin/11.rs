@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 #[derive(Debug)]
 enum Value {
     Old,
-    Const(u32),
+    Const(u64),
 }
 
 #[derive(Debug)]
@@ -14,24 +14,24 @@ enum Operation {
 
 #[derive(Debug)]
 struct Monkey {
-    items: VecDeque<u32>,
+    items: VecDeque<u64>,
     operation: Operation,
-    test_divisible_by: u32,
+    test_divisible_by: u64,
     true_monkey_index: usize,
     false_monkey_index: usize,
 }
 
 impl Value {
-    fn get_value(&self, old_level: u32) -> u32 {
+    fn get_value(&self, old_level: &u64) -> u64 {
         match self {
-            Value::Old => old_level,
-            Value::Const(v) => *v,
+            Value::Old => old_level.clone(),
+            Value::Const(v) => v.clone(),
         }
     }
 }
 
 impl Operation {
-    fn perform(&self, worry_level: u32) -> u32 {
+    fn perform(&self, worry_level: &u64) -> u64 {
         match self {
             Operation::Add(v1, v2) => v1.get_value(worry_level) + v2.get_value(worry_level),
             Operation::Mult(v1, v2) => v1.get_value(worry_level) * v2.get_value(worry_level),
@@ -67,7 +67,7 @@ fn into_monkey(input: &str) -> Monkey {
     // Parse starting items
     let starting_items_line = lines.next().unwrap().trim();
     assert!(starting_items_line.starts_with("Starting items:"));
-    let items: VecDeque<u32> = starting_items_line
+    let items: VecDeque<u64> = starting_items_line
         .trim_start_matches("Starting items: ")
         .split(", ")
         .map(|item| item.parse().unwrap())
@@ -83,7 +83,7 @@ fn into_monkey(input: &str) -> Monkey {
     assert!(test_line.starts_with("Test:"));
     let test_divisible_by = test_line
         .trim_start_matches("Test: divisible by ")
-        .parse::<u32>()
+        .parse::<u64>()
         .unwrap();
 
     // Parse true case
@@ -115,19 +115,29 @@ fn parse_monkeys(input: &str) -> Vec<Monkey> {
     input.split("\n\n").map(into_monkey).collect()
 }
 
-pub fn part_one(input: &str) -> Option<u32> {
-    let mut monkeys = parse_monkeys(input);
-    let mut monkey_inspected_item: Vec<u32> = vec![0; monkeys.len()];
+fn perform_monkey_business(
+    mut monkeys: Vec<Monkey>,
+    rounds: usize,
+    decrease_worry_level: bool,
+) -> u64 {
+    let product_all_monkey_tests = monkeys
+        .iter()
+        .fold(1, |acc, monkey| acc * monkey.test_divisible_by);
 
-    for _ in 0..20 {
+    let mut monkey_inspected_item: Vec<u64> = vec![0; monkeys.len()];
+    for _ in 0..rounds {
         let mut monkey_index = 0;
 
         while monkey_index < monkeys.len() {
             while let Some(item) = monkeys[monkey_index].items.pop_front() {
-                let worry_level_after_operation = monkeys[monkey_index].operation.perform(item);
-                let final_worry_level = worry_level_after_operation / 3;
+                let worry_level_after_operation = monkeys[monkey_index].operation.perform(&item);
+                let final_worry_level = if decrease_worry_level {
+                    (worry_level_after_operation / 3) % product_all_monkey_tests
+                } else {
+                    worry_level_after_operation % product_all_monkey_tests
+                };
                 let test_divisible =
-                    final_worry_level % monkeys[monkey_index].test_divisible_by == 0;
+                    final_worry_level.clone() % monkeys[monkey_index].test_divisible_by == 0;
                 let send_item_to_monkey = if test_divisible {
                     monkeys[monkey_index].true_monkey_index
                 } else {
@@ -146,14 +156,26 @@ pub fn part_one(input: &str) -> Option<u32> {
 
     monkey_inspected_item.sort();
 
-    let two_most_monkeying = monkey_inspected_item[monkey_inspected_item.len() - 2]
-        * monkey_inspected_item[monkey_inspected_item.len() - 1];
+    let two_most_monkeying = monkey_inspected_item[monkey_inspected_item.len() - 2].clone()
+        * monkey_inspected_item[monkey_inspected_item.len() - 1].clone();
 
-    Some(two_most_monkeying)
+    two_most_monkeying
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_one(input: &str) -> Option<u64> {
+    let monkeys = parse_monkeys(input);
+
+    let monkey_business = perform_monkey_business(monkeys, 20, true);
+
+    Some(monkey_business)
+}
+
+pub fn part_two(input: &str) -> Option<u64> {
+    let monkeys = parse_monkeys(input);
+
+    let monkey_business = perform_monkey_business(monkeys, 10000, false);
+
+    Some(monkey_business)
 }
 
 fn main() {
@@ -175,6 +197,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 11);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(2713310158));
     }
 }
