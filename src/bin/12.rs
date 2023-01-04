@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use pathfinding::prelude::astar;
+use pathfinding::prelude::{astar, bfs};
 
 const HEIGHT: &str = "abcdefghijklmnopqrstuvwxyz";
 
@@ -93,27 +93,15 @@ pub fn part_one(input: &str) -> Option<u32> {
 pub fn part_two(input: &str) -> Option<u32> {
     let (grid, _start, end) = parse(input);
 
-    let mut steps = Vec::new();
+    let result = bfs(
+        &end,
+        |curr| possible_moves_from_reversed(curr, &grid),
+        |p| grid[p.0][p.1] == 1,
+    );
 
-    for row in 0..grid.len() {
-        for col in 0..grid[row].len() {
-            if grid[row][col] != 1 {
-                break;
-            }
+    let steps = result.unwrap().len() - 1;
 
-            let result = astar(
-                &(row, col),
-                |curr| possible_moves_from(curr, &grid).into_iter().map(|p| (p, 1)),
-                |&(x, y)| end.0.abs_diff(x) + end.1.abs_diff(y),
-                |p| *p == end,
-            );
-            if let Some((_, result_steps)) = result {
-                steps.push(result_steps);
-            }
-        }
-    }
-
-    Some(*(steps.iter().min().unwrap()) as u32)
+    Some(steps as u32)
 }
 
 fn main() {
