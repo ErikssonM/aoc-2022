@@ -25,14 +25,12 @@ struct Pair {
 }
 
 fn parse_packet_number(input: &str) -> IResult<&str, Packet> {
-    // println!("Parsing digit: {input}");
     map_res(recognize(many0(one_of("0123456789"))), |out: &str| {
         u32::from_str_radix(out, 10).map(|i| Packet::Int(i))
     })(input)
 }
 
 fn parse_packet_list(input: &str) -> IResult<&str, Packet> {
-    // println!("\nParsing packet_list: {input}");
     map(
         preceded(
             tag("["),
@@ -46,7 +44,6 @@ fn parse_packet_list(input: &str) -> IResult<&str, Packet> {
 }
 
 fn parse_pair(input: &str) -> IResult<&str, Pair> {
-    // println!("\nParsing pair: {input}");
     map(
         separated_pair(parse_packet_list, tag("\n"), parse_packet_list),
         |(left, right)| Pair { left, right },
@@ -57,16 +54,6 @@ fn parse(input: &str) -> Vec<Pair> {
     all_consuming(separated_list0(tag("\n\n"), parse_pair))(input)
         .unwrap()
         .1
-
-    // let result = input.split("\n\n").map(|s| parse_pair(s)).collect_vec();
-
-    // for res in result {
-    //     if matches!(res, Result::Err(_)) {
-    //         println!("{res:?}");
-    //     }
-    // }
-
-    // vec![]
 }
 
 impl PartialOrd for Packet {
@@ -74,13 +61,11 @@ impl PartialOrd for Packet {
         Some(match (self, other) {
             (Packet::Int(s), Packet::Int(o)) => s.cmp(o),
             (Packet::List(s), Packet::List(o)) => {
-                // println!("Comparing {s:?} and {o:?}");
                 let mut zipped = zip(s, o);
                 let _ = zipped
-                    .take_while_ref(|&(si, oi)| *si == *oi)
+                    .take_while_ref(|&(si, oi)| si.partial_cmp(oi).unwrap() == Ordering::Equal)
                     .collect::<Vec<(&Packet, &Packet)>>();
                 if let Some((si, oi)) = zipped.next() {
-                    // println!("Itemwise comparison, {si:?}, {oi:?}");
                     si.partial_cmp(&oi).unwrap()
                 } else {
                     s.len().cmp(&o.len())
@@ -102,10 +87,8 @@ pub fn part_one(input: &str) -> Option<u32> {
     let mut sum = 0;
     for (index, pair) in pairs.iter().enumerate() {
         let Pair { left, right } = pair;
-        println!("\nComparing {pair:?}");
 
         if left < right {
-            println!("They are in correct order");
             sum += index + 1;
         }
     }
